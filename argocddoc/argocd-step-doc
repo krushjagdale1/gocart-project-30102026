@@ -1,0 +1,62 @@
+git remote remove origin
+git remote -v
+git remote add origin https://github.com/krushjagdale1/YOUR-REPO-NAME.git
+
+
+
+
+****** Mega DevOps Project *****
+
+Install Jenkins 
+=====================================
+sudo apt update -y 
+sudo apt install docker.io -y && apt install docker-compose -y 
+sudo apt install openjdk-21-jre -y 
+============================================
+
+sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian/jenkins.io-2026.key
+echo "deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt update
+sudo apt install jenkins -y 
+
+============================================
+sudo usermod -aG docker jenkins
+sudo systemctl restart jenkins
+
+**********************************************************************************
+
+
+
+
+**********************************************************************************************
+Argocd 
+
+Install Argocd ---
+kubectl create ns argocd 
+
+kubectl apply --server-side --force-conflicts \
+  -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  
+===============================================================================
+  
+nohup kubectl port-forward svc/argocd-server -n argocd 8080:443 --address 127.0.0.1 > argocd-portforward.log 2>&1 &
+==========================================================
+
+#######Change Argo CD service to NodePort##### --- On master
+kubectl patch svc argocd-server -n argocd \
+  -p '{"spec":{"type":"NodePort","ports":[{"name":"http","port":80,"targetPort":8080,"protocol":"TCP","nodePort":30080},{"name":"https","port":443,"targetPort":8080,"protocol":"TCP","nodePort":30443}]}}'
+ 
+=============================================================
+ 
+  ######Get login credentials####
+  kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath='{.data.password}' | base64 -d
+echo
+
+=================================================
+
+*****************************************************************************************************
