@@ -4,21 +4,23 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'krushjagdale1/gocart-krushna'
-        IMAGE_TAG = "${BUILD_NUMBER}"
+        IMAGE_TAG = "${BRANCH_NAME}-${BUILD_NUMBER}"
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/krushjagdale1/gocart-project-30102026.git',
-                    credentialsId: 'github-creds'
+                echo "Building branch: ${BRANCH_NAME}"
+                checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .'
+                sh '''
+                    docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .
+                '''
             }
         }
 
@@ -30,8 +32,11 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        echo "$DOCKER_PASS" | docker login \
+                            -u "$DOCKER_USER" --password-stdin
+
                         docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
+
                         docker logout
                     '''
                 }
@@ -53,8 +58,13 @@ pipeline {
                         git add k8s-files/deployment.yaml
 
                         if ! git diff --cached --quiet; then
+
                             git commit -m "Update GoCart image to ${IMAGE_TAG} [skip ci]"
-                            git push origin HEAD:main
+
+                            git push origin HEAD:${BRANCH_NAME}
+
+                        else
+                            echo "No manifest changes found"
                         fi
                     '''
                 }
@@ -64,7 +74,9 @@ pipeline {
 
     post {
         success {
-            echo 'Docker image pushed and GitOps manifest updated successfully!'
+            echo "Docker image pushed successfully!"
+            echo "Branch: ${BRANCH_NAME}"
+            echo "Image: ${DOCKER_IMAGE}:${IMAGE_TAG}"
         }
 
         failure {
@@ -76,4 +88,3 @@ pipeline {
         }
     }
 }
-
