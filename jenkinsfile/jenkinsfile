@@ -36,7 +36,6 @@ pipeline {
                             -u "$DOCKER_USER" --password-stdin
 
                         docker push ${DOCKER_IMAGE}:${IMAGE_TAG}
-
                         docker logout
                     '''
                 }
@@ -44,6 +43,14 @@ pipeline {
         }
 
         stage('Update GitOps Manifest') {
+            when {
+                anyOf {
+                    branch 'test'
+                    branch 'prod'
+                    branch 'main'
+                }
+            }
+
             steps {
                 withCredentials([gitUsernamePassword(
                     credentialsId: 'github-creds',
@@ -58,11 +65,8 @@ pipeline {
                         git add k8s-files/deployment.yaml
 
                         if ! git diff --cached --quiet; then
-
                             git commit -m "Update GoCart image to ${IMAGE_TAG} [skip ci]"
-
                             git push origin HEAD:${BRANCH_NAME}
-
                         else
                             echo "No manifest changes found"
                         fi
