@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: gocart
-          image: krushjagdale1/gocart-krushna:5
+          image: krushjagdale1/gocart-krushna:6
           imagePullPolicy: Always
 
           ports:
